@@ -39,11 +39,13 @@ public class ChannelHandlers {
 
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
         ExecutorService executor = null;
+        ChannelHandler dispatcherHandler = ExtensionLoader.getExtensionLoader(Dispatcher.class)
+                .getAdaptiveExtension().dispatch(handler, url);
         if (handler instanceof WrappedChannelHandler ){
-            executor = ((WrappedChannelHandler)handler).getExecutor();
+            executor = ((WrappedChannelHandler)dispatcherHandler).getExecutor();
         }
-        return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
-                                        .getAdaptiveExtension().dispatch(handler, url)), executor);
+
+        return new MultiMessageHandler(new HeartbeatHandler(dispatcherHandler), executor);
     }
 
     private static ChannelHandlers INSTANCE = new ChannelHandlers();
