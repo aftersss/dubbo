@@ -15,10 +15,13 @@
  */
 package com.alibaba.dubbo.rpc.cluster.loadbalance;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
+import com.alibaba.dubbo.common.logger.Logger;
+import com.alibaba.dubbo.common.logger.LoggerFactory;
 import com.alibaba.dubbo.rpc.Invoker;
 import com.alibaba.dubbo.rpc.Invocation;
 import com.alibaba.dubbo.rpc.cluster.LoadBalance;
@@ -29,6 +32,8 @@ import com.alibaba.dubbo.rpc.cluster.LoadBalance;
  * @author william.liangf
  */
 public abstract class AbstractLoadBalance implements LoadBalance {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractLoadBalance.class);
 
     public <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         if (invokers == null || invokers.size() == 0)
@@ -43,8 +48,21 @@ public abstract class AbstractLoadBalance implements LoadBalance {
     protected int getWeight(Invoker<?> invoker, Invocation invocation) {
         int weight = invoker.getUrl().getMethodParameter(invocation.getMethodName(), Constants.WEIGHT_KEY, Constants.DEFAULT_WEIGHT);
         if (weight > 0) {
-	        long timestamp = invoker.getUrl().getParameter(Constants.TIMESTAMP_KEY, 0L);
-	    	if (timestamp > 0L) {
+            //invoker 的类实际上是com.alibaba.dubbo.registry.integration.RegistryDirectory.InvokerDelegete;
+            //long timestamp = invoker.getUrl().getParameter(Constants.TIMESTAMP_KEY, 0L);这个是dubbo源码的写法,实际上获取的是客户端的启动时间,没有用处.
+            //获取provider的注册时间需要用反射获得。
+            long timestamp = 0;
+            try {
+                Method m = invoker.getClass().getMethod("getProviderUrl");
+                m.setAccessible(true);
+                URL providerUrl = (URL)m.invoke(invoker, null);
+                timestamp = providerUrl.getParameter(Constants.TIMESTAMP_KEY, 0L);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
+
+            if (timestamp > 0L) {
 	    		int uptime = (int) (System.currentTimeMillis() - timestamp);
 	    		int warmup = invoker.getUrl().getParameter(Constants.WARMUP_KEY, Constants.DEFAULT_WARMUP);
 	    		if (uptime > 0 && uptime < warmup) {
