@@ -75,6 +75,9 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         if (handler instanceof WrappedChannelHandler ){
             executor = ((WrappedChannelHandler)handler).getExecutor();
         }
+        else if (handler instanceof MultiMessageHandler ){
+            executor = ((MultiMessageHandler)handler).getExecutor();
+        }
     }
     
     protected abstract void doOpen() throws Throwable;

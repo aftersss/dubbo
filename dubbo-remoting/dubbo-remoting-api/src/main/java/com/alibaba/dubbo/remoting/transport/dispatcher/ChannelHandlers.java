@@ -41,7 +41,7 @@ public class ChannelHandlers {
         ExecutorService executor = null;
         ChannelHandler dispatcherHandler = ExtensionLoader.getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url);
-        if (handler instanceof WrappedChannelHandler ){
+        if (dispatcherHandler instanceof WrappedChannelHandler ){
             executor = ((WrappedChannelHandler)dispatcherHandler).getExecutor();
         }
 
