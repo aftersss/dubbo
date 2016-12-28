@@ -6,14 +6,19 @@ import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.exchange.support.MultiMessage;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * @author <a href="mailto:gang.lvg@alibaba-inc.com">kimi</a>
  * @see MultiMessage
  */
 public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
 
-    public MultiMessageHandler(ChannelHandler handler) {
+    private ExecutorService executor;
+
+    public MultiMessageHandler(ChannelHandler handler, ExecutorService executor) {
         super(handler);
+        this.executor = executor;
     }
 
     @SuppressWarnings("unchecked")
@@ -27,5 +32,9 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
         } else {
             handler.received(channel, message);
         }
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 }

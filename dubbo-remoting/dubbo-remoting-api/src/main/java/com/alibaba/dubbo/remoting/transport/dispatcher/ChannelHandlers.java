@@ -23,6 +23,8 @@ import com.alibaba.dubbo.remoting.Dispatcher;
 import com.alibaba.dubbo.remoting.exchange.support.header.HeartbeatHandler;
 import com.alibaba.dubbo.remoting.transport.MultiMessageHandler;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * @author chao.liuc
  *
@@ -36,8 +38,12 @@ public class ChannelHandlers {
     protected ChannelHandlers() {}
 
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
+        ExecutorService executor = null;
+        if (handler instanceof WrappedChannelHandler ){
+            executor = ((WrappedChannelHandler)handler).getExecutor();
+        }
         return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
-                                        .getAdaptiveExtension().dispatch(handler, url)));
+                                        .getAdaptiveExtension().dispatch(handler, url)), executor);
     }
 
     private static ChannelHandlers INSTANCE = new ChannelHandlers();
