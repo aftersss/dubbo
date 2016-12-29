@@ -53,8 +53,12 @@ public class ZookeeperRegistry extends FailbackRegistry {
     private final Set<String> anyServices = new ConcurrentHashSet<String>();
 
     private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
-    
+
+    private final ConcurrentMap<URL, Boolean> registerUrls = new ConcurrentHashMap<URL, Boolean>();
+
     private final ZookeeperClient zkClient;
+
+    private volatile boolean closed = false;
     
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
@@ -88,6 +92,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         super.destroy();
         try {
             zkClient.close();
+            closed = true;
         } catch (Exception e) {
             logger.warn("Failed to close zookeeper client " + getUrl() + ", cause: " + e.getMessage(), e);
         }
@@ -95,6 +100,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     protected void doRegister(URL url) {
         try {
+            registerUrls.put(url, true);
         	zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -103,6 +109,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     protected void doUnregister(URL url) {
         try {
+            Boolean exists = registerUrls.remove(url);
+            if(exists == null && closed) {//当url已经被取消注册并且zkclient状态为关闭的时候，不再调用delete，防止抛异常
+                if(logger.isDebugEnabled()) {
+                    logger.debug("url: "+url + "has been already unregistered.");
+                }
+            }
+
             zkClient.delete(toUrlPath(url));
         } catch (Throwable e) {
             throw new RpcException("Failed to unregister " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
