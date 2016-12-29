@@ -132,7 +132,8 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 }
                 for (ExchangeClient client : clients) {
                     try {
-                        client.close();
+                        //关闭，最多等待1秒,由于默认到同一个ip:port只有一个连接，所以一个dubbo应用关闭时，本方法只会被调用一次，所以最多1秒延时是可接受的
+                        client.close(1000);
                     } catch (Throwable t) {
                         logger.warn(t.getMessage(), t);
                     }
