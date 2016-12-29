@@ -44,16 +44,6 @@
 			<groupId>com.alibaba</groupId>
 			<artifactId>dubbo-config-spring</artifactId>
 			<version>${project.parent.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-beans</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-context</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -124,12 +114,6 @@
 			<groupId>com.alibaba</groupId>
 			<artifactId>dubbo-rpc-rmi</artifactId>
 			<version>${project.parent.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-context</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -151,14 +135,6 @@
 					<groupId>com.caucho</groupId>
     				<artifactId>hessian</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-    				<artifactId>spring-web</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-    				<artifactId>spring-context</artifactId>
-				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -174,10 +150,6 @@
 					<groupId>org.apache.cxf</groupId>
 					<artifactId>cxf-rt-transports-http</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-context</artifactId>
-				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -188,10 +160,6 @@
 				<exclusion>
 					<groupId>org.apache.thrift</groupId>
 					<artifactId>libthrift</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-context</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -266,12 +234,6 @@
 			<groupId>com.alibaba</groupId>
 			<artifactId>dubbo-container-spring</artifactId>
 			<version>${project.parent.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-context</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
