@@ -114,6 +114,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 if(logger.isDebugEnabled()) {
                     logger.debug("url: "+url + "has been already unregistered.");
                 }
+                return;
             }
 
             zkClient.delete(toUrlPath(url));
