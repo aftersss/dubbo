@@ -109,6 +109,7 @@ public class NettyServer extends AbstractServer implements Server {
             if (channels != null && channels.size() > 0) {
                 for (com.alibaba.dubbo.remoting.Channel channel : channels) {
                     try {
+                        //TODO 这里可能要改成优雅关闭，目前发出消息后不会等待消息发送成功，是异步的，如果关闭瞬间close掉channel，可能消息就发不出去了，先不改，观察看看。
                         channel.close();
                     } catch (Throwable e) {
                         logger.warn(e.getMessage(), e);

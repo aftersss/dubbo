@@ -30,10 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -75,6 +72,8 @@ public abstract class AbstractRegistry implements Registry {
 
     // 文件缓存定时写入
     private final ExecutorService registryCacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("DubboSaveRegistryCache", true));
+    //由于销毁时从zookeeper取消注册太慢（一个100ms，100个就要10秒了），所以需要并发执行取消注册
+    private final ExecutorService registryDestroyExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 5, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 
     //是否是同步保存文件
     private final boolean syncSaveFile ;
@@ -486,10 +485,16 @@ public abstract class AbstractRegistry implements Registry {
         }
         Set<URL> destroyRegistered = new HashSet<URL>(getRegistered());
         if (! destroyRegistered.isEmpty()) {
-            for (URL url : new HashSet<URL>(getRegistered())) {
+            List<Runnable> runnables = new ArrayList<Runnable>(destroyRegistered.size());
+            for (final URL url : new HashSet<URL>(getRegistered())) {
                 if (url.getParameter(Constants.DYNAMIC_KEY, true)) {
                     try {
-                        unregister(url);
+                        //把取消注册放到线程池中并发执行，加快速度
+                        runnables.add(new Runnable() {
+                            public void run() {
+                                unregister(url);
+                            }
+                        });
                         if (logger.isInfoEnabled()) {
                             logger.info("Destroy unregister url " + url);
                         }
@@ -497,6 +502,10 @@ public abstract class AbstractRegistry implements Registry {
                         logger.warn("Failed to unregister url " + url + " to registry " + getUrl() + " on destroy, cause: " + t.getMessage(), t);
                     }
                 }
+            }
+            if(!runnables.isEmpty()){
+                //最多等待5秒
+                executeTasksBlocking(runnables, 5000);
             }
         }
         Map<URL, Set<NotifyListener>> destroySubscribed = new HashMap<URL, Set<NotifyListener>>(getSubscribed());
@@ -514,6 +523,31 @@ public abstract class AbstractRegistry implements Registry {
                     }
                 }
             }
+        }
+    }
+
+    private void executeTasksBlocking(List<Runnable> runnables, long maxWaitTimeMillis){
+        final CountDownLatch latch = new CountDownLatch(runnables.size());
+
+        for (final Runnable r : runnables) {
+            registryDestroyExecutor.execute(new Runnable() {
+                public void run() {
+                    try {
+                        r.run();
+                    } finally {
+                        latch.countDown();
+                    }
+                }
+            });
+        }
+
+        try {
+            boolean success = latch.await(maxWaitTimeMillis, TimeUnit.MILLISECONDS);
+            if(!success){
+                logger.warn("unregister all registries from zookeeper is not finished in " + maxWaitTimeMillis + " ms.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
