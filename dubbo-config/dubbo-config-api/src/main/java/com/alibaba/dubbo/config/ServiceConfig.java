@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
@@ -89,6 +91,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 	private transient volatile boolean unexported;
     
     private volatile String generic;
+
+    private static final ConcurrentMap<String, String> cachedHost = new ConcurrentHashMap<String, String>();
 
     public ServiceConfig() {
     }
@@ -285,6 +289,58 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         }
     }
 
+    /**
+     * 把host缓存起来，防止每次注册dubbo服务都获取一次,加快启动速度
+     * @param registryURLs
+     * @return
+     */
+    private static String getCachedHost(List<URL> registryURLs){
+        String host = null;
+        StringBuilder key = new StringBuilder();
+        for(URL url : registryURLs) {
+            key.append(url.getHost()).append(":").append(url.getPort()).append("_");
+        }
+        host = cachedHost.get(key.toString());
+        if(host != null){
+            return host;
+        }
+
+        try {
+            host = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            logger.warn(e.getMessage(), e);
+        }
+        if (NetUtils.isInvalidLocalHost(host)) {
+            if (registryURLs != null && registryURLs.size() > 0) {
+                for (URL registryURL : registryURLs) {
+                    try {
+                        Socket socket = new Socket();
+                        try {
+                            SocketAddress addr = new InetSocketAddress(registryURL.getHost(), registryURL.getPort());
+                            socket.connect(addr, 1000);
+                            host = socket.getLocalAddress().getHostAddress();
+                            break;
+                        } finally {
+                            try {
+                                socket.close();
+                            } catch (Throwable e) {}
+                        }
+                    } catch (Exception e) {
+                        logger.warn(e.getMessage(), e);
+                    }
+                }
+            }
+            if (NetUtils.isInvalidLocalHost(host)) {
+                host = NetUtils.getLocalHost();
+            }
+        }
+
+        if(host != null) {
+            cachedHost.put(key.toString(), host);
+        }
+        return host;
+    }
+
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
         if (name == null || name.length() == 0) {
@@ -298,34 +354,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         boolean anyhost = false;
         if (NetUtils.isInvalidLocalHost(host)) {
             anyhost = true;
-            try {
-                host = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                logger.warn(e.getMessage(), e);
-            }
-            if (NetUtils.isInvalidLocalHost(host)) {
-                if (registryURLs != null && registryURLs.size() > 0) {
-                    for (URL registryURL : registryURLs) {
-                        try {
-                            Socket socket = new Socket();
-                            try {
-                                SocketAddress addr = new InetSocketAddress(registryURL.getHost(), registryURL.getPort());
-                                socket.connect(addr, 1000);
-                                host = socket.getLocalAddress().getHostAddress();
-                                break;
-                            } finally {
-                                try {
-                                    socket.close();
-                                } catch (Throwable e) {}
-                            }
-                        } catch (Exception e) {
-                            logger.warn(e.getMessage(), e);
-                        }
-                    }
-                }
-                if (NetUtils.isInvalidLocalHost(host)) {
-                    host = NetUtils.getLocalHost();
-                }
+            String hostCached = getCachedHost(registryURLs);
+            if(hostCached != null){
+                host = hostCached;
             }
         }
 
