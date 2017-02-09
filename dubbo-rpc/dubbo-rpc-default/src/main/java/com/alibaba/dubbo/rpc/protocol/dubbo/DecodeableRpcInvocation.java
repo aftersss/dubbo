@@ -138,4 +138,8 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
         return this;
     }
 
+    public Request getRequest(){
+        return request;
+    }
+
 }

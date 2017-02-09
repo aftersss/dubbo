@@ -105,6 +105,10 @@ public class DubboProtocol extends AbstractProtocol {
                     }
                 }
                 RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
+                if(message instanceof DecodeableRpcInvocation && RpcContext.getContext().get(Constants.REQUEST_ID_KEY) == null){
+                    //把requestId放入RpcContext，以便后面服务端超时的时候识别requestId并打印
+                    RpcContext.getContext().set(Constants.REQUEST_ID_KEY,((DecodeableRpcInvocation)message).getRequest().getId());
+                }
                 return invoker.invoke(inv);
             }
             throw new RemotingException(channel, "Unsupported request: " + message == null ? null : (message.getClass().getName() + ": " + message) + ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress());
