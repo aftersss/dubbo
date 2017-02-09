@@ -41,6 +41,7 @@ import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.Client;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.transport.dispatcher.ChannelHandlers;
+import com.alibaba.dubbo.remoting.transport.dispatcher.direct.DirectDispatcher;
 
 /**
  * AbstractClient
@@ -128,6 +129,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler){
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
         url = url.addParameterIfAbsent(Constants.THREADPOOL_KEY, Constants.DEFAULT_CLIENT_THREADPOOL);
+        //dubbo客户端强制使用DirectDispatcher，减少不必要的上下文切换
+        url = url.addParameterIfAbsent(Constants.DISPATCHER_KEY, DirectDispatcher.NAME);
         return ChannelHandlers.wrap(handler, url);
     }
     

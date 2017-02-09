@@ -15,6 +15,8 @@
  */
 package com.alibaba.dubbo.remoting.transport.netty;
 
+import com.alibaba.dubbo.common.Constants;
+import com.alibaba.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,7 +45,7 @@ public class ThreadNameTest {
     public void before() throws Exception {
         int port = 55555;
         serverURL = URL.valueOf("netty://localhost").setPort(port);
-        clientURL = URL.valueOf("netty://localhost").setPort(port);
+        clientURL = URL.valueOf("netty://localhost").setPort(port).addParameter(Constants.DISPATCHER_KEY, AllDispatcher.NAME);
 
         serverHandler = new ThreadNameVerifyHandler(String.valueOf(port), false);
         clientHandler = new ThreadNameVerifyHandler(String.valueOf(port), true);

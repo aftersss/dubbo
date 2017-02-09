@@ -59,7 +59,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
                 timestamp = providerUrl.getParameter(Constants.TIMESTAMP_KEY, 0L);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
-                throw new RuntimeException(e);
+                timestamp = invoker.getUrl().getParameter(Constants.TIMESTAMP_KEY, 0L);
             }
 
             if (timestamp > 0L) {
