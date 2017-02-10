@@ -43,7 +43,7 @@ public class TimeoutFilter implements Filter {
             Long requestId = (Long)RpcContext.getContext().get(Constants.REQUEST_ID_KEY);
             if (logger.isWarnEnabled()) {
                 logger.warn("invoke time out. requestId:" + requestId + ",method: " + invocation.getMethodName()
-                        + ",arguments: " + Arrays.toString(invocation.getArguments()) + " , url is "
+                        + ",arguments: " + Arrays.toString(invocation.getArguments()) + " , url: "
                         + invoker.getUrl() + ", invoke elapsed " + elapsed + " ms.");
             }
         }
