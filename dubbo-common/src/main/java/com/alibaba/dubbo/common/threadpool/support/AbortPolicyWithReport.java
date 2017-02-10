@@ -49,7 +49,7 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
                 threadName, e.getPoolSize(), e.getActiveCount(), e.getCorePoolSize(), e.getMaximumPoolSize(), e.getLargestPoolSize(),
                 e.getTaskCount(), e.getCompletedTaskCount(), e.isShutdown(), e.isTerminated(), e.isTerminating(),
                 url.getProtocol(), url.getIp(), url.getPort());
-        logger.warn(msg);
+        logger.error(msg);
         throw new RejectedExecutionException(msg);
     }
 
