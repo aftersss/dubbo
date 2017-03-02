@@ -201,3 +201,5 @@ cd ../bin
     http://root:root@127.0.0.1:8080
 ```
 
+#发布到仓库
+mvn clean deploy -DskipTests -Dmaven.test.skip=true

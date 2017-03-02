@@ -190,7 +190,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                                         // 兼容旧版本xsd中的default值
                                         value = null;
                                     }
-                                    reference = value;
+                                    reference = new TypedStringValue(value);
                                 } else if ("protocol".equals(property) 
                                         && ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(value)
                                         && (! parserContext.getRegistry().containsBeanDefinition(value)
