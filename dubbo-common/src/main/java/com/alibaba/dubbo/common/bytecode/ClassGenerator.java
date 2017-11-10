@@ -290,7 +290,8 @@ public final class ClassGenerator
 	}
 
 	public Class<?> toClass(){
-		return toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
+		//修复和spring-boot-devtools共用出现ClassCastException的问题
+		return toClass(Thread.currentThread().getContextClassLoader(), getClass().getProtectionDomain());
 	}
 
 	public Class<?> toClass(ClassLoader loader, ProtectionDomain pd)
